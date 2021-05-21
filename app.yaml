@@ -1,7 +1,0 @@
-runtime: nodejs14
-service: default
-env: standard
-entrypoint: "npm run default"
-
-env_variables:
-  SHEETS_APIKEY: AIzaSyDbUlBhhluuUWYcyqXZlmnjPBhKXjp3R_Q
