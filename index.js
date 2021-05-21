@@ -53,7 +53,7 @@ exports.handleNewSubscriber = async (req, res) => {
     try {
         // Append the new subscriber information to the rows of sheetName
         const result = await appendToRows(jwt, apiKey, spreadsheetId, sheetName, rowValues);
-        
+
         return res.status(200).type('text/plain').send(result);
     } catch (err) {
         return res.status(400).type('text/plain').send(`An error occurred! ${err}`);
@@ -191,7 +191,7 @@ function getApiKey() {
  * @param {string[]} sheetNames The array of subsheet names to search
  * @param {string} email The "key" to search in `subsheetNames`
  * @param {'row' | 'rowIndex'} rowOrRowIndex Whether or not to return the row or the index of the row
- * @returns {number} The resulting row index with the key `email`, `-1` if that row index is not found.
+ * @returns {number | any[] | null} Dependent upon `rowOrRowIndex`, the resulting row or row index with the key `email`, `null` or `-1` if that row index is not found.
  * @throws An error getting the row index with the key `email`
  */
 async function findRowOrRowIndexWithEmail(jwt, apiKey, spreadsheetId, sheetNames, email, rowOrRowIndex='row') {
@@ -211,6 +211,10 @@ async function findRowOrRowIndexWithEmail(jwt, apiKey, spreadsheetId, sheetNames
 
                 return ind;
             }
+        }
+
+        if (rowOrRowIndex === 'row') {
+            return null;
         }
 
         return -1;
