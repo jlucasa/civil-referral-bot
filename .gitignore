@@ -1,3 +1,5 @@
 node_modules/
 apikey.json
 credentials.json
+.env
+app.yaml
