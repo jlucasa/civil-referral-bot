@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Home - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#appendToRows">appendToRows</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#deleteRow">deleteRow</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#findRowOrRowIndexWithEmail">findRowOrRowIndexWithEmail</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#updateRow">updateRow</a></span></li>
+</nav>
+
+<div id="main">
+    
+
+    
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+    <section class="readme">
+        <article><h1><code>civil-referral-bot</code></h1>
+<h2>Summary</h2>
+<p>This repository contains code snippets necessary to automate transfer of data between the Mailchimp account for Civil and a Google Sheet which keeps track of subscriber referral count. This integrates with Google Apps Scripts in order to complete the full referral program.</p>
+<h2>How the System Works</h2>
+<p>This system can currently handle the following abilities, which are self-descriptive:</p>
+<ul>
+<li><code>handleNewSubscriber</code></li>
+<li><code>handleNewUnsubscriber</code></li>
+<li><code>handleUpdatedSubscriber</code></li>
+</ul>
+<p>Documentation for these can be found on this page.</p>
+<h2>Platforms and APIs in Use</h2>
+<p>The code in this repository is deployed to <strong>Google Cloud Platform</strong> using serverless <strong>Cloud Functions</strong>.</p>
+<p>These cloud functions have endpoints which connect to <strong>Mailchimp's webhook functions</strong>, where each webhook function has the expected behavioral trigger.</p>
+<p>Each cloud function utilizes a <strong>service account</strong> with Edit Access to the Civil Referral Hub Google Sheet, using an <strong>API key</strong> with full access to the Google Sheets API.</p>
+<h3>Example</h3>
+<p><code>handleNewSubscriber</code> is marked as the entry point of a cloud function with an endpoint listed as a Mailchimp webhook, which only fires when a new subscriber is posted.</p>
+<h2>Testing</h2>
+<p>In order to test this system, the following steps should be performed. Ideally, they would be performed in the following order, to promote reuse of testing assets (i.e. e-mail addresses):</p>
+<ul>
+<li><code>handleNewSubscriber</code>:
+<ul>
+<li>Subscribe to Civil Media using a new e-mail address</li>
+<li>Go to &quot;Testing Sheet&quot; in the Civil Referral Hub Google Sheet</li>
+<li>Ensure that the corresponding data has been appended to the end of the sheet</li>
+</ul>
+</li>
+<li><code>handleUpdatedSubscriber</code>:
+<ul>
+<li>Refer a new e-mail address to subscribe to Civil Media using the newly-subscribed e-mail address from <code>handleNewSubscriber</code></li>
+<li>Go to &quot;Testing Sheet&quot; in the Civil Referral Hub Google Sheet</li>
+<li>The e-mail address from <code>handleNewSubscriber</code> should now have an updated referral count.</li>
+<li>The referred e-mail address should also be appended to the sheet (through <code>handleNewSubscriber</code>).</li>
+<li>The create date should not be the same as the update date.</li>
+<li><strong>Note:</strong> This function will fire for any subscriber updates (for instance, e-mail address changes).</li>
+</ul>
+</li>
+<li><code>handleNewUnsubscriber</code>:
+<ul>
+<li>Unsubscribe the e-mail address originally subscribed through <code>handleNewSubscriber</code></li>
+<li>Go to &quot;Testing Sheet&quot; in the Civil Referral Hub Google Sheet</li>
+<li>The row which corresponds to that e-mail address should now be removed, <strong>and no blank row should be in its place.</strong></li>
+</ul>
+</li>
+</ul>
+<h2>TODO</h2>
+<ul>
+<li>Need to be able to handle cleaned subscribers, as requested for full functionality</li>
+<li>Testing needs to be discussed. Some tests are harder to pull off than others (i.e. <code>handleUpdatedSubscriber</code>).</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Fri May 21 2021 10:12:14 GMT-0600 (Mountain Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
