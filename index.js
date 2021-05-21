@@ -3,14 +3,23 @@ const sheets = google.sheets('v4');
 
 const SCOPE = ['https://www.googleapis.com/auth/spreadsheets'];
 
+/**
+ * Copies over new subscriber information from Mailchimp to Google Sheets (through Mailchimp webhooks) 
+ * @param {any} req The HTTP request body
+ * @param {any} res The HTTP response structure
+ * @returns 200 if the user information was successfully copied over, 400 if an error occurred along the way.
+ */
 exports.handleNewSubscriber = async (req, res) => {
     let merges = req.body.data.merges;
 
     const jwt = getJwt();
     const apiKey = getApiKey();
     const spreadsheetId = process.env.SPREADSHEETID;
-    const range = 'Testing Sheet!A1:L1';
 
+    // The name of the sheet to append the row for the new subscriber to
+    const sheetName = 'Testing Sheet';
+
+    // Information of new subscriber to copy over
     const emailAddress = merges['EMAIL'];
     const rhCode = merges['RH_CODE'];
     const rhRefLink = merges['RH_REFLINK'];
@@ -21,10 +30,12 @@ exports.handleNewSubscriber = async (req, res) => {
     const rhIsShare = merges['RH_ISSHARE'];
     const rhSharer = merges['RH_SHARER'];
 
+    // New date/time for the new subscriber information to carry
     const addedDate = new Date().toISOString().
         replace(/T/, ' ').      // replace T with a space
         replace(/\..+/, '');    // delete the dot and everything after
 
+    // Information for new subscriber to copy over
     const rowValues = [
         emailAddress,
         rhCode, 
@@ -40,13 +51,21 @@ exports.handleNewSubscriber = async (req, res) => {
     ];
 
     try {
-        const result = await appendToRows(jwt, apiKey, spreadsheetId, range, rowValues);
+        // Append the new subscriber information to the rows of sheetName
+        const result = await appendToRows(jwt, apiKey, spreadsheetId, sheetName, rowValues);
+        
         return res.status(200).type('text/plain').send(result);
     } catch (err) {
         return res.status(400).type('text/plain').send(`An error occurred! ${err}`);
     }
 }
 
+/**
+ * Removes new unsubscriber information from Google Sheets, assuming that the e-mail address from Mailchimp already exists in Google Sheets.
+ * @param {any} req The HTTP request body
+ * @param {any} res The HTTP response structure
+ * @returns 200 if the row was successfully deleted from Google Sheets, 400 if the e-mail address to delete could not be found, 500 if an error occurred along the way.
+ */
 exports.handleNewUnsubscriber = async (req, res) => {
     const emailAddress = req.body.data.merges['EMAIL'];
 
@@ -54,15 +73,20 @@ exports.handleNewUnsubscriber = async (req, res) => {
     const apiKey = getApiKey();
     const spreadsheetId = process.env.SPREADSHEETID;
     const sheetId = process.env.SHEETID;
+
+    // Sheet names to search for data in (should really only be of size 1)
     const sheetNames = ['Testing Sheet'];
 
     try {
+        // Search for the row index that corresponds to the provided e-mail address
         const rowIndexWithEmail = await findRowOrRowIndexWithEmail(jwt, apiKey, spreadsheetId, sheetNames, emailAddress, 'rowIndex');
 
         if (rowIndexWithEmail === -1) {
+            // Row index could not be found, return 400
             return res.status(400).type('text/plain').send(`Email address to delete (${emailAddress}) could not be found.`);
         }
 
+        // Attempt to update the row at rowIndex
         const deletedRow = await deleteRow(jwt, apiKey, spreadsheetId, sheetId, rowIndexWithEmail);
 
         return res.status(200).send(deletedRow);
@@ -71,14 +95,23 @@ exports.handleNewUnsubscriber = async (req, res) => {
     }
 }
 
+/**
+ * Handles *any* updated subscriber information, assuming that the e-mail address from Mailchimp already exists in Google Sheets.
+ * @param {any} req The HTTP request body
+ * @param {any} res The HTTP response structure
+ * @returns 200 if the new user information was successfully copied over from Mailchimp to Google Sheets, overwriting any old information, 400 if the e-mail address to update could not be found, 500 if an error occurred along the way
+ */
 exports.handleUpdatedSubscriber = async (req, res) => {
     let merges = req.body.data.merges;
 
     const jwt = getJwt();
     const apiKey = getApiKey();
     const spreadsheetId = process.env.SPREADSHEETID;
+
+    // Sheet names to search for data in (should really only be of size 1)
     const sheetNames = ['Testing Sheet'];
 
+    // New information to copy over
     const emailAddress = merges['EMAIL'];
     const rhCode = merges['RH_CODE'];
     const rhRefLink = merges['RH_REFLINK'];
@@ -89,10 +122,12 @@ exports.handleUpdatedSubscriber = async (req, res) => {
     const rhIsShare = merges['RH_ISSHARE'];
     const rhSharer = merges['RH_SHARER'];
 
+    // Updated date/time for the new information to carry
     const updatedDate = new Date().toISOString().
         replace(/T/, ' ').      // replace T with a space
         replace(/\..+/, '');    // delete the dot and everything after
 
+    // Note: ensure that "createdDate" is null here, since we don't want to update this
     const rowValues = [
         emailAddress,
         rhCode, 
@@ -108,12 +143,15 @@ exports.handleUpdatedSubscriber = async (req, res) => {
     ]; 
 
     try {
+        // Search for the row index that corresponds to the provided e-mail address
         const rowIndexWithEmail = await findRowOrRowIndexWithEmail(jwt, apiKey, spreadsheetId, sheetNames, emailAddress, 'rowIndex');
 
+        // Row index could not be found, return 400
         if (rowIndexWithEmail === -1) {
             return res.status(400).type('text/plain').send(`Email address to update (${emailAddress}) could not be found.`);
         }
 
+        // Attempt to update the row at rowIndex
         const updatedRow = await updateRow(jwt, apiKey, spreadsheetId, sheetNames[0], rowIndexWithEmail, rowValues);
 
         return res.status(200).send(updatedRow);
@@ -123,6 +161,10 @@ exports.handleUpdatedSubscriber = async (req, res) => {
     
 }
 
+/**
+ * Gets the JSON web token information for the service account passed in through `credentials.json`. Obviously, `credentials.json` for the service account which has Google Sheets Edit Access is required.
+ * @returns JSON web token information for this service account.
+ */
 function getJwt() {
     const credentials = require('./credentials.json');
     return new google.auth.JWT(
@@ -133,6 +175,10 @@ function getJwt() {
     )
 }
 
+/**
+ * Fetches the API key from `apikey.json` (obviously required). The API key should have Google Sheets API access.
+ * @returns An API key which has Google Sheets API access.
+ */
 function getApiKey() {
     return require('./apikey.json').key;
 }
