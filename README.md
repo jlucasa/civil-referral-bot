@@ -1,4 +1,4 @@
-# `civil-referral-bot`
+# Civil Referral Bot
 
 ## Summary
 
